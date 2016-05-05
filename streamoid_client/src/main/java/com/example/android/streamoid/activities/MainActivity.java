@@ -1,0 +1,186 @@
+package com.example.android.streamoid.activities;
+
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
+import android.media.MediaMetadataRetriever;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+
+import com.example.android.streamoid.R;
+import com.example.android.streamoid.Utils;
+import com.example.android.streamoid.adapter.TrackAdapter;
+import com.example.android.streamoid.adapter.listeners.OnItemClickListener;
+import com.example.android.streamoid.adapter.listeners.OnItemLongClickListener;
+import com.example.android.streamoid.model.MusicTrack;
+import com.example.android.streamoid.udp_connection.BroadcastListener;
+import com.example.android.streamoid.udp_connection.BroadcastSender;
+
+import java.io.File;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.Collections;
+
+import butterknife.Bind;
+
+public class MainActivity extends BaseActivity implements MyCallback, OnItemClickListener, OnItemLongClickListener {
+
+    private static final int PICKFILE_RESULT_CODE = 1;
+    @Bind(R.id.toolbar)
+    protected Toolbar tb;
+    @Bind(R.id.lvMain)
+    protected RecyclerView tracksRecyclerView;
+
+    private MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+    private TrackAdapter trackAdapter;
+    private BroadcastListener broadcastListener;
+    private BroadcastSender broadcastSender;
+    private DecimalFormat decimalFormat;
+    private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
+    private MediaPlayer mp;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setSupportActionBar(tb);
+        decimalFormatSymbols.setGroupingSeparator('.');
+        decimalFormat = new DecimalFormat("0.00", decimalFormatSymbols);
+        broadcastListener = new BroadcastListener(8999, this);
+        new Thread(broadcastListener).start();
+        broadcastSender = new BroadcastSender(9001);
+        new Thread(broadcastSender).start();
+        trackAdapter = new TrackAdapter(this, new ArrayList<>(Collections.<MusicTrack>emptyList()));
+        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT |
+                ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                int swipePosition = viewHolder.getAdapterPosition();
+                trackAdapter.removeItem(swipePosition);
+            }
+
+
+        };
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleCallback);
+        itemTouchHelper.attachToRecyclerView(tracksRecyclerView);
+        tracksRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        tracksRecyclerView.setAdapter(trackAdapter);
+
+    }
+
+    @Override
+    public int getContentView() {
+        return R.layout.activity_main;
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (broadcastListener != null)
+            broadcastListener.stop();
+        if (broadcastSender != null)
+            broadcastSender.stop();
+    }
+
+    @Override
+    public void updateText(final String str) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+//                textView.setText(str);
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.mainmenu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.settings:
+                Intent intent = new Intent(this, PreferencesActivity.class);
+                startActivity(intent);
+                break;
+            case R.id.fileChoose:
+                Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                fileIntent.setType("*/*");
+                fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
+                try {
+                    startActivityForResult(Intent.createChooser(fileIntent, "Select a file"), PICKFILE_RESULT_CODE);
+                } catch (ActivityNotFoundException exception) {
+                    toast("Please install file manager");
+                }
+            default:
+                break;
+            case R.id.aboutProgram:
+                Intent intentAbout = new Intent(this, AboutActivity.class);
+                startActivity(intentAbout);
+                break;
+        }
+        return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+// TODO Auto-generated method stub
+        switch (requestCode) {
+            case PICKFILE_RESULT_CODE:
+                if (resultCode == RESULT_OK) {
+                    String filePath = Utils.getPath(this, data.getData());
+                    String fileName = Utils.getFileName(filePath);
+                    if (filePath != null) {
+                        File file = new File(filePath);
+                        String fileSize = decimalFormat.format((float) file.length() / (1024 * 1024)) + " Mb";
+                        mmr.setDataSource(this, Uri.parse(filePath));
+                        String parsedTrackDuration = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+                        int trackDuration = Integer.valueOf(parsedTrackDuration) / 1000;
+                        String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+                        Log.e("Check", artist);
+                        MusicTrack musicTrack = new MusicTrack(artist, filePath, fileName, fileSize, String.format("%d:%d", trackDuration / 60, trackDuration % 60));
+                        trackAdapter.addItem(musicTrack);
+                    } else {
+                        toast("Error while reading file");
+                    }
+
+                }
+                break;
+
+        }
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        setTitle(String.format("Hello, %s", appPreferences.getDeviceName()));
+    }
+
+    @Override
+    public void onItemClick(int position) {
+        MusicTrack musicTrack = trackAdapter.getItem(position);
+        toast("Yo Nigga");
+        //ToDo
+    }
+
+    @Override
+    public void onItemLongClick(int position) {
+        MusicTrack musicTrack = trackAdapter.getItem(position);
+        toast("Looooong Click");
+    }
+}

@@ -1,13 +1,41 @@
 package com.example.android.streamoid;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+import butterknife.Bind;
+
+public class MainActivity extends BaseActivity implements MyCallback {
+    @Bind(R.id.textView)
+    TextView textView;
+    private Server server;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        server = new Server(9000);
+        server.run();
+    }
+
+    @Override
+    public int getContentView() {
+        return R.layout.activity_main;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (server != null) server.stop();
+    }
+
+    @Override
+    public void updateText(final String str) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                textView.setText(str);
+            }
+        });
+
     }
 }
