@@ -1,8 +1,5 @@
-package com.example.android.streamoid;
+package com.example.android.streamoid.udp_connection;
 
-/**
- * Created by RadMushroom on 16.04.2016.
- */
 public class NetworkProtocol {
     public static final int CLIENT_KEY = 0;
     public static final int SERVER_KEY = 1;

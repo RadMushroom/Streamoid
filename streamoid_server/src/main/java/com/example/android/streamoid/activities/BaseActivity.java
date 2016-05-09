@@ -1,4 +1,4 @@
-package com.example.android.streamoid;
+package com.example.android.streamoid.activities;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;

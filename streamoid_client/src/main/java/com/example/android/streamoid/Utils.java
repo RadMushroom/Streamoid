@@ -47,6 +47,6 @@ public class Utils {
     public static boolean checkWiFiConnection(Context context) {
         ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo mWifi = connManager.getActiveNetworkInfo();
-        return mWifi.getType() == ConnectivityManager.TYPE_WIFI && mWifi.isConnected();
+        return mWifi != null && mWifi.getType() == ConnectivityManager.TYPE_WIFI && mWifi.isConnected();
     }
 }

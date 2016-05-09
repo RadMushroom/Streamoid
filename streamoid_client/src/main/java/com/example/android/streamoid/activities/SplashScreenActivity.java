@@ -4,7 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
-import android.widget.ImageButton;
+import android.widget.ImageView;
 
 import com.example.android.streamoid.R;
 import com.example.android.streamoid.Utils;
@@ -15,7 +15,7 @@ import butterknife.OnClick;
 public class SplashScreenActivity extends BaseActivity {
 
     @Bind(R.id.refreshButton)
-    ImageButton refreshButton;
+    ImageView refreshButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

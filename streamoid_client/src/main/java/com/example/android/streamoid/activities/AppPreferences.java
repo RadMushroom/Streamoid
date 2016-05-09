@@ -1,4 +1,6 @@
-package com.example.android.streamoid;
+package com.example.android.streamoid.activities;
+
+import com.example.android.streamoid.R;
 
 import net.orange_box.storebox.annotations.method.DefaultValue;
 import net.orange_box.storebox.annotations.method.KeyByString;
@@ -15,8 +17,4 @@ public interface AppPreferences {
     @KeyByString("deviceName")
     AppPreferences setDeviceName(String deviceName);
 
-    @KeyByString("userpicPath")
-    String getUserpicPath();
-    @KeyByString("userpicPath")
-    AppPreferences setUserpicPath(String userpicPath);
 }

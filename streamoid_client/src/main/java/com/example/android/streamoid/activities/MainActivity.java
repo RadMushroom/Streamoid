@@ -2,6 +2,7 @@ package com.example.android.streamoid.activities;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -13,32 +14,42 @@ import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ImageView;
 
 import com.example.android.streamoid.R;
+import com.example.android.streamoid.StreamoidApp;
 import com.example.android.streamoid.Utils;
 import com.example.android.streamoid.adapter.TrackAdapter;
 import com.example.android.streamoid.adapter.listeners.OnItemClickListener;
-import com.example.android.streamoid.adapter.listeners.OnItemLongClickListener;
 import com.example.android.streamoid.model.MusicTrack;
+import com.example.android.streamoid.tcp_connection.StreamingManager;
 import com.example.android.streamoid.udp_connection.BroadcastListener;
 import com.example.android.streamoid.udp_connection.BroadcastSender;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Collections;
 
+import javax.inject.Inject;
+
 import butterknife.Bind;
+import butterknife.OnClick;
 
-public class MainActivity extends BaseActivity implements MyCallback, OnItemClickListener, OnItemLongClickListener {
+public class MainActivity extends BaseActivity implements MyCallback, OnItemClickListener {
 
-    private static final int PICKFILE_RESULT_CODE = 1;
+    private static final int PICKFILE_REQUEST_CODE = 1001;
+    private static final int PICKIMAGE_REQUEST_CODE = 1002;
     @Bind(R.id.toolbar)
     protected Toolbar tb;
     @Bind(R.id.lvMain)
     protected RecyclerView tracksRecyclerView;
-
+    @Bind(R.id.userPic)
+    ImageView userPic;
+    @Inject
+    protected StreamingManager streamingManager;
     private MediaMetadataRetriever mmr = new MediaMetadataRetriever();
     private TrackAdapter trackAdapter;
     private BroadcastListener broadcastListener;
@@ -50,7 +61,9 @@ public class MainActivity extends BaseActivity implements MyCallback, OnItemClic
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        StreamoidApp.getAppComponent().inject(this);
         setSupportActionBar(tb);
+        mp = new MediaPlayer();
         decimalFormatSymbols.setGroupingSeparator('.');
         decimalFormat = new DecimalFormat("0.00", decimalFormatSymbols);
         broadcastListener = new BroadcastListener(8999, this);
@@ -123,10 +136,11 @@ public class MainActivity extends BaseActivity implements MyCallback, OnItemClic
                 fileIntent.setType("*/*");
                 fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
                 try {
-                    startActivityForResult(Intent.createChooser(fileIntent, "Select a file"), PICKFILE_RESULT_CODE);
+                    startActivityForResult(Intent.createChooser(fileIntent, "Select a file"), PICKFILE_REQUEST_CODE);
                 } catch (ActivityNotFoundException exception) {
                     toast("Please install file manager");
                 }
+                break;
             default:
                 break;
             case R.id.aboutProgram:
@@ -141,7 +155,7 @@ public class MainActivity extends BaseActivity implements MyCallback, OnItemClic
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 // TODO Auto-generated method stub
         switch (requestCode) {
-            case PICKFILE_RESULT_CODE:
+            case PICKFILE_REQUEST_CODE:
                 if (resultCode == RESULT_OK) {
                     String filePath = Utils.getPath(this, data.getData());
                     String fileName = Utils.getFileName(filePath);
@@ -161,7 +175,13 @@ public class MainActivity extends BaseActivity implements MyCallback, OnItemClic
 
                 }
                 break;
-
+            case PICKIMAGE_REQUEST_CODE:
+                if (resultCode == RESULT_OK) {
+                    String imagePath = Utils.getPath(this, data.getData());
+                    appPreferences.setUserpicPath(imagePath);
+                    userPic.setImageBitmap(BitmapFactory.decodeFile(appPreferences.getUserpicPath()));
+                }
+                break;
         }
     }
 
@@ -169,18 +189,56 @@ public class MainActivity extends BaseActivity implements MyCallback, OnItemClic
     protected void onStart() {
         super.onStart();
         setTitle(String.format("Hello, %s", appPreferences.getDeviceName()));
+        userPic.setImageBitmap(BitmapFactory.decodeFile(appPreferences.getUserpicPath()));
+    }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (mp.isPlaying()) {
+            mp.stop();
+            mp.reset();
+            mp.release();
+        }
     }
 
     @Override
     public void onItemClick(int position) {
+//        AudioTrack audioTrack = new AudioTrack();
         MusicTrack musicTrack = trackAdapter.getItem(position);
-        toast("Yo Nigga");
-        //ToDo
+        if (mp.isPlaying()) {
+            mp.stop();
+            mp.reset();
+        } else {
+            try {
+                mp.setDataSource(musicTrack.getFilePath());
+                mp.prepare();
+                mp.start();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
-    @Override
-    public void onItemLongClick(int position) {
-        MusicTrack musicTrack = trackAdapter.getItem(position);
-        toast("Looooong Click");
+    @OnClick(R.id.userPic)
+    protected void chooseUserPicPath() {
+        Intent fileIntent = new Intent(Intent.ACTION_GET_CONTENT);
+        fileIntent.setType("*/*");
+        fileIntent.addCategory(Intent.CATEGORY_OPENABLE);
+        try {
+            startActivityForResult(Intent.createChooser(fileIntent, "Select a file"), PICKIMAGE_REQUEST_CODE);
+        } catch (ActivityNotFoundException exception) {
+            toast("Please install file manager");
+        }
+    }
+
+    @OnClick(R.id.fab)
+    protected void startStream() {
+        if (trackAdapter != null && !trackAdapter.getData().isEmpty()) {
+            streamingManager.sendMetaData(trackAdapter.getData());
+        } else {
+            toast("Dobav trekov bolshe");
+        }
     }
 }

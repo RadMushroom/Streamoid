@@ -15,7 +15,7 @@ public class AboutActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         View aboutPage = new AboutPage(this)
                 .isRTL(false)
-                .setImage(R.drawable.logo_prefina)
+                .setImage(R.drawable.splash_logo_about)
                 .addGroup("Connect with us")
                 .addEmail("vergilb5@gmail.com")
                 .addWebsite("http://radmushroom.github.io/")

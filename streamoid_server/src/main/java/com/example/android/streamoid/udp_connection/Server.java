@@ -1,4 +1,4 @@
-package com.example.android.streamoid;
+package com.example.android.streamoid.udp_connection;
 
 import java.util.logging.Logger;
 

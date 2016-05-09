@@ -1,6 +1,11 @@
-package com.example.android.streamoid;
+package com.example.android.streamoid.udp_connection;
 
 import android.util.Log;
+
+import com.example.android.streamoid.StreamoidApp;
+import com.example.android.streamoid.Utils;
+import com.example.android.streamoid.model.MusicTrack;
+import com.google.gson.Gson;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -12,6 +17,8 @@ import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+
 /**
  * Created by RadMushroom on 16.04.2016.
  */
@@ -19,10 +26,11 @@ public class BroadcastListener implements Runnable {
     private int serverPort;
     private DatagramSocket socket;
     private Queue<DatagramPacket> pool = new LinkedList<>();
-    MyCallback callback = null;
-
+    @Inject
+    protected Gson gson;
     public BroadcastListener(int serverPort) {
         this.serverPort = serverPort;
+        StreamoidApp.getAppComponent().inject(this);
     }
 
     @Override
@@ -78,7 +86,9 @@ public class BroadcastListener implements Runnable {
                             Logger.getGlobal().log(Level.SEVERE, e.getMessage(), e);
                         }
                         Logger.getGlobal().info(">>>Sent packet |" + new String(sendData) + "| to: " + sendPacket.getAddress().getHostAddress());
-                    } else if (message.equals(NetworkProtocol.DISCONNECT)) {
+                    } else if (Utils.isTrackJson(message)) {
+                        MusicTrack musicTrack = gson.fromJson(message,MusicTrack.class);
+                        Log.e("Check",musicTrack.toString());
                     }
                 }
                 Logger.getGlobal().info("Pool handle stopped.");

@@ -30,9 +30,11 @@ dependencies {
     compile 'com.android.support:recyclerview-v7:23.3.0'
     compile 'net.orange-box.storebox:storebox-lib:1.4.0'
     provided 'org.projectlombok:lombok:1.12.6'
-    provided 'org.glassfish:javax.annotation:10.0-b28'
     apt "org.projectlombok:lombok:1.12.6"
-    compile 'de.hdodenhof:circleimageview:2.0.0'
     compile 'com.github.medyo:android-about-page:1.0.4'
-
-    }
+    compile 'com.google.code.gson:gson:2.6.2'
+    // injection
+    compile 'com.google.dagger:dagger:2.0.1'
+    apt 'com.google.dagger:dagger-compiler:2.0'
+    provided 'org.glassfish:javax.annotation:10.0-b28'
+}

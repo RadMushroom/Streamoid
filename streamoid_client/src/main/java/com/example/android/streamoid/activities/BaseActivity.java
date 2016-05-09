@@ -7,23 +7,26 @@ import android.text.TextUtils;
 import android.widget.Toast;
 
 import com.example.android.streamoid.AppPreferences;
+import com.example.android.streamoid.StreamoidApp;
+import com.google.gson.Gson;
 
-import net.orange_box.storebox.StoreBox;
+import javax.inject.Inject;
 
 import butterknife.ButterKnife;
 
-/**
- * Created by RadMushroom on 20.04.2016.
- */
 public abstract class BaseActivity extends AppCompatActivity {
+    @Inject
     protected AppPreferences appPreferences;
+    @Inject
+    protected Gson gson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(getContentView());
         ButterKnife.bind(this);
-        appPreferences = StoreBox.create(this,AppPreferences.class);
+        StreamoidApp.getAppComponent().inject(this);
+
     }
 
     public abstract int getContentView();

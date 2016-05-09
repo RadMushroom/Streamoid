@@ -1,9 +1,10 @@
 package com.example.android.streamoid.udp_connection;
 
 import android.app.Activity;
-import android.util.Log;
 
+import com.example.android.streamoid.StreamoidApp;
 import com.example.android.streamoid.activities.MyCallback;
+import com.example.android.streamoid.tcp_connection.StreamingManager;
 
 import java.io.IOException;
 import java.net.DatagramPacket;
@@ -12,6 +13,8 @@ import java.net.SocketException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.inject.Inject;
+
 /**
  * Created by RadMushroom on 16.04.2016.
  */
@@ -19,10 +22,12 @@ public class BroadcastListener extends Activity implements Runnable {
     MyCallback myCallback = null;
     private int clientPort;
     private DatagramSocket socket;
-
+    @Inject
+    protected StreamingManager streamingManager;
     public BroadcastListener(int serverPort, MyCallback callback) {
         this.clientPort = serverPort;
         this.myCallback = callback;
+        StreamoidApp.getAppComponent().inject(this);
     }
 
 
@@ -40,8 +45,7 @@ public class BroadcastListener extends Activity implements Runnable {
                 socket.receive(packet);
                 final String serverAddress = packet.getAddress().getHostAddress();
                 this.myCallback.updateText("Connected to host: " + serverAddress);
-                Log.e("Check",serverAddress);
-                //Proceed TCP connection
+                streamingManager.setServerAddress(serverAddress);
             }
         } catch (SocketException se) {
             Logger.getGlobal().log(Level.WARNING, "Socket closed: " + se.getMessage());
