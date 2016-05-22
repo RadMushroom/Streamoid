@@ -45,7 +45,7 @@ public class TrackViewHolder extends BaseViewHolder<MusicTrack> {
 
     @Override
     public void bind(MusicTrack musicTrack) {
-        trackDuration.setText(musicTrack.getFileDuration());
+        trackDuration.setText(String.format("%d:%d", musicTrack.getFileDuration()/ (60*1000), musicTrack.getFileDuration() % (60*1000)));
         fileName.setText(musicTrack.getFileName());
         fileSize.setText(musicTrack.getFileSize());
         trackArtist.setText(musicTrack.getFileArtist());

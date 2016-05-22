@@ -19,14 +19,12 @@ import javax.inject.Inject;
  * Created by RadMushroom on 16.04.2016.
  */
 public class BroadcastListener extends Activity implements Runnable {
-    MyCallback myCallback = null;
     private int clientPort;
     private DatagramSocket socket;
     @Inject
     protected StreamingManager streamingManager;
     public BroadcastListener(int serverPort, MyCallback callback) {
         this.clientPort = serverPort;
-        this.myCallback = callback;
         StreamoidApp.getAppComponent().inject(this);
     }
 
@@ -44,7 +42,6 @@ public class BroadcastListener extends Activity implements Runnable {
                 DatagramPacket packet = new DatagramPacket(recvBuf, recvBuf.length);
                 socket.receive(packet);
                 final String serverAddress = packet.getAddress().getHostAddress();
-                this.myCallback.updateText("Connected to host: " + serverAddress);
                 streamingManager.setServerAddress(serverAddress);
             }
         } catch (SocketException se) {

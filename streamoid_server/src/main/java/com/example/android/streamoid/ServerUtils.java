@@ -12,7 +12,7 @@ import com.google.gson.JsonSyntaxException;
 /**
  * Created by RadMushroom on 21.04.2016.
  */
-public class Utils {
+public class ServerUtils {
 
     public static boolean checkWiFiConnection(Context context) {
         ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -25,7 +25,7 @@ public class Utils {
             new Gson().fromJson(json, MusicTrack.class);
             return true;
         } catch (JsonSyntaxException e){
-            Log.e(Utils.class.getSimpleName(),e.getMessage());
+            Log.e(ServerUtils.class.getSimpleName(),e.getMessage());
             return false;
         }
     }

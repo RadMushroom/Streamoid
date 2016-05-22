@@ -12,7 +12,7 @@ public class Server {
 
     public Server(int port) {
         this.serverPort = port;
-        broadcastMessageThread = new BroadcastListener(9001);
+        broadcastMessageThread = new BroadcastListener(9001,null);
     }
 
     public void run() {

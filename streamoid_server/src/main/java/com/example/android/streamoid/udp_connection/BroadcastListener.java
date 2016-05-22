@@ -2,9 +2,11 @@ package com.example.android.streamoid.udp_connection;
 
 import android.util.Log;
 
+import com.example.android.streamoid.Callback;
 import com.example.android.streamoid.StreamoidApp;
-import com.example.android.streamoid.Utils;
+import com.example.android.streamoid.ServerUtils;
 import com.example.android.streamoid.model.MusicTrack;
+import com.example.android.streamoid.tcp_connection.PlaybackManager;
 import com.google.gson.Gson;
 
 import java.io.IOException;
@@ -19,17 +21,16 @@ import java.util.logging.Logger;
 
 import javax.inject.Inject;
 
-/**
- * Created by RadMushroom on 16.04.2016.
- */
 public class BroadcastListener implements Runnable {
+    Callback myCallback = null;
     private int serverPort;
     private DatagramSocket socket;
     private Queue<DatagramPacket> pool = new LinkedList<>();
     @Inject
     protected Gson gson;
-    public BroadcastListener(int serverPort) {
+    public BroadcastListener(int serverPort,Callback callback) {
         this.serverPort = serverPort;
+        this.myCallback = callback;
         StreamoidApp.getAppComponent().inject(this);
     }
 
@@ -72,7 +73,7 @@ public class BroadcastListener implements Runnable {
             public void run() {
                 Logger.getGlobal().info("Ready to handle packet pool...");
                 while (pool.size() != 0) {
-                    DatagramPacket packet = pool.poll();
+                    final DatagramPacket packet = pool.poll();
                     String message = new String(packet.getData()).trim();
                     Log.e("Recv",message);
                     if (message.equals(NetworkProtocol.DISCOVER)) {
@@ -86,9 +87,16 @@ public class BroadcastListener implements Runnable {
                             Logger.getGlobal().log(Level.SEVERE, e.getMessage(), e);
                         }
                         Logger.getGlobal().info(">>>Sent packet |" + new String(sendData) + "| to: " + sendPacket.getAddress().getHostAddress());
-                    } else if (Utils.isTrackJson(message)) {
-                        MusicTrack musicTrack = gson.fromJson(message,MusicTrack.class);
+                    } else if (ServerUtils.isTrackJson(message)) {
+                        final MusicTrack musicTrack = gson.fromJson(message,MusicTrack.class);
                         Log.e("Check",musicTrack.toString());
+                       // myCallback.updateAdapter(musicTrack);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                PlaybackManager.requestStream(packet.getAddress(),10001,musicTrack);
+                            }
+                        }).start();
                     }
                 }
                 Logger.getGlobal().info("Pool handle stopped.");

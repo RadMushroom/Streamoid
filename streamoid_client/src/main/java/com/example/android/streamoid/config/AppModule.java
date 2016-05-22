@@ -28,8 +28,8 @@ public class AppModule {
 
     @Singleton
     @Provides
-    public StreamingManager provideStreamingManager(Gson gson){
-        return new StreamingManager(gson);
+    public StreamingManager provideStreamingManager(Gson gson,Context context){
+        return new StreamingManager(gson,context);
     }
 
     @Singleton

@@ -9,7 +9,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.android.streamoid.R;
-import com.example.android.streamoid.Utils;
 
 import butterknife.Bind;
 
@@ -20,7 +19,6 @@ public class PreferencesActivity extends BaseActivity {
     protected Toolbar toolbar;
     @Bind(R.id.userPicPath)
     protected TextView userPicPath;
-    private static final int PICKFILE_RESULT_CODE = 1;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

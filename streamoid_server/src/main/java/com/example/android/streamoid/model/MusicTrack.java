@@ -14,5 +14,5 @@ public class MusicTrack {
     private String filePath;
     private String fileName;
     private String fileSize;
-    private String fileDuration;
+    private int fileDuration;
 }

@@ -6,7 +6,9 @@ import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -16,6 +18,8 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 
+import com.canelmas.let.AskPermission;
+import com.canelmas.let.Let;
 import com.example.android.streamoid.R;
 import com.example.android.streamoid.StreamoidApp;
 import com.example.android.streamoid.Utils;
@@ -31,12 +35,16 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.jar.Manifest;
 
 import javax.inject.Inject;
 
 import butterknife.Bind;
 import butterknife.OnClick;
+
+import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
 public class MainActivity extends BaseActivity implements MyCallback, OnItemClickListener {
 
@@ -61,6 +69,15 @@ public class MainActivity extends BaseActivity implements MyCallback, OnItemClic
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        String arch = System.getProperty("os.arch");
+        Log.e("Check",arch);
+        Log.i("Check", "CPU_ABI : " + Build.CPU_ABI);
+        Log.i("Check", "CPU_ABI2 : " + Build.CPU_ABI2);
+        Log.i("Check", "OS.ARCH : " + System.getProperty("os.arch"));
+
+        Log.i("Check", "SUPPORTED_ABIS : " + Arrays.toString(Build.SUPPORTED_ABIS));
+        Log.i("Check", "SUPPORTED_32_BIT_ABIS : " + Arrays.toString(Build.SUPPORTED_32_BIT_ABIS));
+        Log.i("Check", "SUPPORTED_64_BIT_ABIS : " + Arrays.toString(Build.SUPPORTED_64_BIT_ABIS));
         StreamoidApp.getAppComponent().inject(this);
         setSupportActionBar(tb);
         mp = new MediaPlayer();
@@ -164,10 +181,9 @@ public class MainActivity extends BaseActivity implements MyCallback, OnItemClic
                         String fileSize = decimalFormat.format((float) file.length() / (1024 * 1024)) + " Mb";
                         mmr.setDataSource(this, Uri.parse(filePath));
                         String parsedTrackDuration = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
-                        int trackDuration = Integer.valueOf(parsedTrackDuration) / 1000;
+                        int trackDuration = Integer.valueOf(parsedTrackDuration);
                         String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-                        Log.e("Check", artist);
-                        MusicTrack musicTrack = new MusicTrack(artist, filePath, fileName, fileSize, String.format("%d:%d", trackDuration / 60, trackDuration % 60));
+                        MusicTrack musicTrack = new MusicTrack(artist, filePath, fileName, fileSize, trackDuration);
                         trackAdapter.addItem(musicTrack);
                     } else {
                         toast("Error while reading file");
@@ -205,7 +221,6 @@ public class MainActivity extends BaseActivity implements MyCallback, OnItemClic
 
     @Override
     public void onItemClick(int position) {
-//        AudioTrack audioTrack = new AudioTrack();
         MusicTrack musicTrack = trackAdapter.getItem(position);
         if (mp.isPlaying()) {
             mp.stop();
@@ -233,12 +248,20 @@ public class MainActivity extends BaseActivity implements MyCallback, OnItemClic
         }
     }
 
+
     @OnClick(R.id.fab)
+    @AskPermission(WRITE_EXTERNAL_STORAGE)
     protected void startStream() {
         if (trackAdapter != null && !trackAdapter.getData().isEmpty()) {
             streamingManager.sendMetaData(trackAdapter.getData());
         } else {
-            toast("Dobav trekov bolshe");
+            toast("Add more tracks to playlist");
         }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        Let.handle(this,requestCode,permissions,grantResults);
     }
 }

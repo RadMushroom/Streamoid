@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Streamoid Server</string>
+    <string name="default_device_name">Default Server</string>
+    <string name="device_name">Device Name</string>
 </resources>

@@ -9,6 +9,12 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
+import com.github.hiteshsondhi88.libffmpeg.FFmpeg;
+import com.github.hiteshsondhi88.libffmpeg.LoadBinaryResponseHandler;
+import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegCommandAlreadyRunningException;
+import com.github.hiteshsondhi88.libffmpeg.exceptions.FFmpegNotSupportedException;
+
 /**
  * Created by RadMushroom on 21.04.2016.
  */
@@ -48,5 +54,41 @@ public class Utils {
         ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo mWifi = connManager.getActiveNetworkInfo();
         return mWifi != null && mWifi.getType() == ConnectivityManager.TYPE_WIFI && mWifi.isConnected();
+    }
+
+    public static void decode(String path, final ExecuteBinaryResponseHandler responseHandler, Context context) {
+        final String cmd = "-i "+path+" -acodec pcm_s16le -ar 44100 "+path.substring(0,path.lastIndexOf('.'))+".wav";
+        Log.i("CMD",cmd);
+        final FFmpeg ffmpeg = FFmpeg.getInstance(context);
+        try {
+            ffmpeg.loadBinary(new LoadBinaryResponseHandler() {
+
+                @Override
+                public void onStart() {
+                    Log.e("onStart","onStart");
+                }
+
+                @Override
+                public void onFailure() {
+                    Log.e("onFailure","onFailure");
+                }
+
+                @Override
+                public void onSuccess() {
+                    try {
+                        ffmpeg.execute(cmd.split(" "), responseHandler);
+                    } catch (FFmpegCommandAlreadyRunningException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                @Override
+                public void onFinish() {
+                    Log.e("onFinish","onFinish");
+                }
+            });
+        } catch (FFmpegNotSupportedException e) {
+            // Handle if FFmpeg is not supported by device
+        }
     }
 }
