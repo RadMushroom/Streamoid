@@ -3,7 +3,6 @@ package com.example.android.streamoid.udp_connection;
 import android.app.Activity;
 
 import com.example.android.streamoid.StreamoidApp;
-import com.example.android.streamoid.activities.MyCallback;
 import com.example.android.streamoid.tcp_connection.StreamingManager;
 
 import java.io.IOException;
@@ -23,7 +22,7 @@ public class BroadcastListener extends Activity implements Runnable {
     private DatagramSocket socket;
     @Inject
     protected StreamingManager streamingManager;
-    public BroadcastListener(int serverPort, MyCallback callback) {
+    public BroadcastListener(int serverPort) {
         this.clientPort = serverPort;
         StreamoidApp.getAppComponent().inject(this);
     }

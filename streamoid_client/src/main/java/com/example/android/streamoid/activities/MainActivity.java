@@ -6,14 +6,12 @@ import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
@@ -35,9 +33,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.jar.Manifest;
 
 import javax.inject.Inject;
 
@@ -46,7 +42,7 @@ import butterknife.OnClick;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 
-public class MainActivity extends BaseActivity implements MyCallback, OnItemClickListener {
+public class MainActivity extends BaseActivity implements OnItemClickListener {
 
     private static final int PICKFILE_REQUEST_CODE = 1001;
     private static final int PICKIMAGE_REQUEST_CODE = 1002;
@@ -69,21 +65,12 @@ public class MainActivity extends BaseActivity implements MyCallback, OnItemClic
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        String arch = System.getProperty("os.arch");
-        Log.e("Check",arch);
-        Log.i("Check", "CPU_ABI : " + Build.CPU_ABI);
-        Log.i("Check", "CPU_ABI2 : " + Build.CPU_ABI2);
-        Log.i("Check", "OS.ARCH : " + System.getProperty("os.arch"));
-
-        Log.i("Check", "SUPPORTED_ABIS : " + Arrays.toString(Build.SUPPORTED_ABIS));
-        Log.i("Check", "SUPPORTED_32_BIT_ABIS : " + Arrays.toString(Build.SUPPORTED_32_BIT_ABIS));
-        Log.i("Check", "SUPPORTED_64_BIT_ABIS : " + Arrays.toString(Build.SUPPORTED_64_BIT_ABIS));
         StreamoidApp.getAppComponent().inject(this);
         setSupportActionBar(tb);
         mp = new MediaPlayer();
         decimalFormatSymbols.setGroupingSeparator('.');
         decimalFormat = new DecimalFormat("0.00", decimalFormatSymbols);
-        broadcastListener = new BroadcastListener(8999, this);
+        broadcastListener = new BroadcastListener(8999);
         new Thread(broadcastListener).start();
         broadcastSender = new BroadcastSender(9001);
         new Thread(broadcastSender).start();
@@ -123,16 +110,6 @@ public class MainActivity extends BaseActivity implements MyCallback, OnItemClic
             broadcastListener.stop();
         if (broadcastSender != null)
             broadcastSender.stop();
-    }
-
-    @Override
-    public void updateText(final String str) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-//                textView.setText(str);
-            }
-        });
     }
 
     @Override

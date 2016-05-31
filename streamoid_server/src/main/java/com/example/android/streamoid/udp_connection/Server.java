@@ -1,5 +1,7 @@
 package com.example.android.streamoid.udp_connection;
 
+import com.example.android.streamoid.Callback;
+
 import java.util.logging.Logger;
 
 /**
@@ -10,9 +12,9 @@ public class Server {
     protected boolean isStopped = false;
     private BroadcastListener broadcastMessageThread;
 
-    public Server(int port) {
+    public Server(int port, Callback callback) {
         this.serverPort = port;
-        broadcastMessageThread = new BroadcastListener(9001,null);
+        broadcastMessageThread = new BroadcastListener(9001,callback);
     }
 
     public void run() {

@@ -18,12 +18,10 @@ import com.example.android.streamoid.udp_connection.Server;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import butterknife.Bind;
 
 public class MainActivity extends BaseActivity implements Callback {
-    List<MusicTrack> receivedTracks = null;
     private Server server;
     @Bind(R.id.toolbar)
     protected Toolbar tb;
@@ -37,7 +35,7 @@ public class MainActivity extends BaseActivity implements Callback {
         super.onCreate(savedInstanceState);
         StreamoidApp.getAppComponent().inject(this);
         setSupportActionBar(tb);
-        server = new Server(9000);
+        server = new Server(9000,this);
         server.run();
         trackAdapter = new TrackAdapter(this,new ArrayList<>(Collections.<MusicTrack>emptyList()));
         tracksRecyclerView.setLayoutManager(new LinearLayoutManager(this));

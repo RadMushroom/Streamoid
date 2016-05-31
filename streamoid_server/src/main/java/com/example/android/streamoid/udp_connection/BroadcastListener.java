@@ -3,8 +3,8 @@ package com.example.android.streamoid.udp_connection;
 import android.util.Log;
 
 import com.example.android.streamoid.Callback;
-import com.example.android.streamoid.StreamoidApp;
 import com.example.android.streamoid.ServerUtils;
+import com.example.android.streamoid.StreamoidApp;
 import com.example.android.streamoid.model.MusicTrack;
 import com.example.android.streamoid.tcp_connection.PlaybackManager;
 import com.google.gson.Gson;
@@ -90,7 +90,7 @@ public class BroadcastListener implements Runnable {
                     } else if (ServerUtils.isTrackJson(message)) {
                         final MusicTrack musicTrack = gson.fromJson(message,MusicTrack.class);
                         Log.e("Check",musicTrack.toString());
-                       // myCallback.updateAdapter(musicTrack);
+                        myCallback.updateAdapter(musicTrack);
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
