@@ -6,6 +6,7 @@ import com.example.android.streamoid.Callback;
 import com.example.android.streamoid.ServerUtils;
 import com.example.android.streamoid.StreamoidApp;
 import com.example.android.streamoid.model.MusicTrack;
+import com.example.android.streamoid.model.QueueItem;
 import com.example.android.streamoid.tcp_connection.PlaybackManager;
 import com.google.gson.Gson;
 
@@ -94,7 +95,11 @@ public class BroadcastListener implements Runnable {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                PlaybackManager.requestStream(packet.getAddress(),10001,musicTrack);
+                                QueueItem queueItem = new QueueItem();
+                                queueItem.setAddress(packet.getAddress());
+                                queueItem.setPort(10001);
+                                queueItem.setMusicTrack(musicTrack);
+                                PlaybackManager.addToPlayList(queueItem);
                             }
                         }).start();
                     }
