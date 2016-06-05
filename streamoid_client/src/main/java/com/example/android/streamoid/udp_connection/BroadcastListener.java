@@ -1,5 +1,4 @@
 package com.example.android.streamoid.udp_connection;
-
 import android.app.Activity;
 
 import com.example.android.streamoid.StreamoidApp;
@@ -13,10 +12,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.inject.Inject;
-
-/**
- * Created by RadMushroom on 16.04.2016.
- */
 public class BroadcastListener extends Activity implements Runnable {
     private int clientPort;
     private DatagramSocket socket;

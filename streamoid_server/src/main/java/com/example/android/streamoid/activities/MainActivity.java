@@ -1,6 +1,7 @@
 package com.example.android.streamoid.activities;
 
 import android.content.Intent;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -29,10 +30,15 @@ public class MainActivity extends BaseActivity implements Callback {
     protected RecyclerView tracksRecyclerView;
     public static TrackAdapter trackAdapter;
     private BroadcastListener broadcastListener;
+    private WifiManager.MulticastLock multicastLock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+        multicastLock = wifiManager.createMulticastLock("lock");
+        multicastLock.setReferenceCounted(true);
+        multicastLock.acquire();
         StreamoidApp.getAppComponent().inject(this);
         setSupportActionBar(tb);
         server = new Server(9000,this);
@@ -50,6 +56,10 @@ public class MainActivity extends BaseActivity implements Callback {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (multicastLock != null){
+            multicastLock.release();
+            multicastLock = null;
+        }
         if (server != null) server.stop();
     }
 

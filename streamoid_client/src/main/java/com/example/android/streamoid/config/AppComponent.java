@@ -3,6 +3,7 @@ package com.example.android.streamoid.config;
 import com.example.android.streamoid.activities.BaseActivity;
 import com.example.android.streamoid.activities.MainActivity;
 import com.example.android.streamoid.udp_connection.BroadcastListener;
+import com.example.android.streamoid.udp_connection.BroadcastSender;
 
 import javax.inject.Singleton;
 
@@ -18,4 +19,5 @@ public interface AppComponent {
 
     void inject(BroadcastListener broadcastListener);
     void inject(MainActivity mainActivity);
+    void inject(BroadcastSender broadcastSender);
 }

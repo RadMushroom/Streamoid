@@ -1,5 +1,8 @@
 package com.example.android.streamoid.udp_connection;
 
+import com.example.android.streamoid.AppPreferences;
+import com.example.android.streamoid.StreamoidApp;
+
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
@@ -8,15 +11,18 @@ import java.net.SocketException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- * Created by RadMushroom on 16.04.2016.
- */
+import javax.inject.Inject;
+
 public class BroadcastSender implements Runnable {
+
+    @Inject
+    AppPreferences appPreferences;
     private int clientPort;
     private DatagramSocket socket;
 
     public BroadcastSender(int serverPort) {
         this.clientPort = serverPort;
+        StreamoidApp.getAppComponent().inject(this);
     }
 
     @Override
@@ -27,7 +33,7 @@ public class BroadcastSender implements Runnable {
             socket.setBroadcast(true);
             byte[] sendData = NetworkProtocol.DISCOVER.getBytes();
             //Send a response
-            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName("255.255.255.255"), 9001);
+            DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(appPreferences.getBroadcastAddress()), 9001);
             try {
                 socket.send(sendPacket);
             } catch (IOException e) {

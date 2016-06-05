@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
@@ -61,11 +63,26 @@ public class MainActivity extends BaseActivity implements OnItemClickListener {
     private DecimalFormat decimalFormat;
     private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
     private MediaPlayer mp;
+    private WifiManager.MulticastLock multicastLock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         StreamoidApp.getAppComponent().inject(this);
+        WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
+        multicastLock = wifiManager.createMulticastLock("lock");
+        multicastLock.setReferenceCounted(true);
+        multicastLock.acquire();
+        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+        int ip = wifiInfo.getIpAddress();
+
+        String ipString = String.format(
+                "%d.%d.%d.%d",
+                (ip & 0xff),
+                (ip >> 8 & 0xff),
+                (ip >> 16 & 0xff),
+                (ip >> 24 & 0xff));
+        appPreferences.setBroadcastAddress(ipString.substring(0,ipString.length()-3)+"255");
         setSupportActionBar(tb);
         mp = new MediaPlayer();
         decimalFormatSymbols.setGroupingSeparator('.');
@@ -106,6 +123,10 @@ public class MainActivity extends BaseActivity implements OnItemClickListener {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (multicastLock != null){
+            multicastLock.release();
+            multicastLock = null;
+        }
         if (broadcastListener != null)
             broadcastListener.stop();
         if (broadcastSender != null)
@@ -239,6 +260,6 @@ public class MainActivity extends BaseActivity implements OnItemClickListener {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        Let.handle(this,requestCode,permissions,grantResults);
+        Let.handle(this, requestCode, permissions, grantResults);
     }
 }

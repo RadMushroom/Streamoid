@@ -3,12 +3,14 @@ package com.example.android.streamoid.tcp_connection;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.util.Log;
 
 import com.example.android.streamoid.model.MusicTrack;
 import com.example.android.streamoid.model.QueueItem;
 import com.example.android.streamoid.udp_connection.NetworkProtocol;
 import com.google.gson.Gson;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -45,7 +47,7 @@ public class PlaybackManager {
         MusicTrack musicTrack = queueItem.getMusicTrack();
         try {
             final Socket socket = new Socket(address, port);
-            final DataInputStream dis = new DataInputStream(socket.getInputStream());
+            final DataInputStream dis = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
             dos.writeInt(NetworkProtocol.START_STREAM);
             dos.writeUTF(new Gson().toJson(musicTrack));
@@ -61,6 +63,25 @@ public class PlaybackManager {
                                 bufferSize, AudioTrack.MODE_STREAM);
                         final long fileSize = dis.readLong();
                         audioTrack.play();
+                        audioTrack.setNotificationMarkerPosition(musicTrack.getFileDuration()*frequency);
+                        audioTrack.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener() {
+                            @Override
+                            public void onMarkerReached(AudioTrack track) {
+                                Log.i("MarkerReached","MarkerReached");
+                                try {
+                                    socket.close();
+                                    isPlaying = false;
+                                    requestStream();
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            @Override
+                            public void onPeriodicNotification(AudioTrack track) {
+
+                            }
+                        });
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
@@ -69,21 +90,14 @@ public class PlaybackManager {
                                     byte[] buffer = new byte[10240];
                                     try {
                                         readBytes += dis.read(buffer);
+                                        Log.i("ReadBytes",""+readBytes);
                                         audioTrack.write(buffer, 0, buffer.length);
                                     } catch (IOException e) {
                                         isPlaying = false;
                                         e.printStackTrace();
                                     }
-
                                 }
-                                try {
-                                    socket.close();
-                                    isPlaying = false;
-                                    requestStream();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
-
+                                Log.i("njnjnj",""+audioTrack.getPlaybackHeadPosition());
                             }
                         }).start();
                         break;

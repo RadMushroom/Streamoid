@@ -3,6 +3,7 @@ package com.example.android.streamoid.tcp_connection;
 import android.content.Context;
 import android.util.Log;
 
+import com.example.android.streamoid.AppPreferences;
 import com.example.android.streamoid.Utils;
 import com.example.android.streamoid.model.MusicTrack;
 import com.example.android.streamoid.udp_connection.NetworkProtocol;
@@ -22,15 +23,19 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 
+import javax.inject.Inject;
 
 public class StreamingManager {
     private String serverAddress;
     private Gson gson;
     protected Context context;
-
-    public StreamingManager(Gson gson, Context context) {
+    @Inject
+    AppPreferences preferences;
+    public StreamingManager(Gson gson, Context context, AppPreferences preferences) {
         this.gson = gson;
+        this.preferences = preferences;
         this.context = context;
+        System.setProperty("http.keepAlive","false");
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -38,19 +43,17 @@ public class StreamingManager {
                     ServerSocket ss = new ServerSocket(10001);
                     while (!Thread.currentThread().isInterrupted()) {
                         Socket socket = ss.accept();
+                        Log.i("Handle", socket.toString());
                         handle(socket);
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                   Log.e("SocketError",e.getMessage());
                 }
             }
         }).start();
     }
 
     private void handle(final Socket socket) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
                 try {
                     int command;
                     DataInputStream dis = new DataInputStream(socket.getInputStream());
@@ -59,6 +62,9 @@ public class StreamingManager {
                             case NetworkProtocol.START_STREAM:
                                 MusicTrack musicTrack = gson.fromJson(dis.readUTF(), MusicTrack.class);
                                 final File file = new File(musicTrack.getFilePath().substring(0, musicTrack.getFilePath().lastIndexOf('.')) + ".wav");
+                                if (file.exists()){
+                                    file.delete();
+                                }
                                 Utils.decode(musicTrack.getFilePath(), new ExecuteBinaryResponseHandler() {
                                     @Override
                                     public void onProgress(String message) {
@@ -89,11 +95,12 @@ public class StreamingManager {
                                             long bytesRead = 0;
                                             while ((bytesRead += bis.read(buffer, 0, buffer.length)) != file.length()) {
                                                 dos.write(buffer);
+                                                Log.i("Chunk",""+bytesRead);
                                                 dos.flush();
                                             }
                                             bis.close();
                                         } catch (IOException e) {
-                                            e.printStackTrace();
+                                            Log.e("onFinishError",e.getMessage());
                                         }
                                     }
 
@@ -109,10 +116,8 @@ public class StreamingManager {
                         }
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Log.e("HandleError","HandleError");
                 }
-            }
-        }).start();
     }
 
     public void sendMetaData(final List<MusicTrack> musicTracks) {
@@ -123,7 +128,7 @@ public class StreamingManager {
                     DatagramSocket datagramSocket = new DatagramSocket(10000);
                     for (MusicTrack musicTrack : musicTracks) {
                         byte[] metaData = gson.toJson(musicTrack).getBytes();
-                        DatagramPacket datagramPacket = new DatagramPacket(metaData, metaData.length, InetAddress.getByName("255.255.255.255"), 9001);
+                        DatagramPacket datagramPacket = new DatagramPacket(metaData, metaData.length, InetAddress.getByName(preferences.getBroadcastAddress()), 9001);
                         datagramSocket.send(datagramPacket);
                     }
                 } catch (IOException e) {

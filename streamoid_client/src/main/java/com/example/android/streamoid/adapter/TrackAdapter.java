@@ -12,9 +12,7 @@ import com.example.android.streamoid.model.MusicTrack;
 
 import java.util.List;
 
-/**
- * Created by RadMushroom on 27.04.2016.
- */
+
 public class TrackAdapter extends BaseRecyclerViewAdapter<MusicTrack> {
 
     private OnItemClickListener onItemClickListener;
