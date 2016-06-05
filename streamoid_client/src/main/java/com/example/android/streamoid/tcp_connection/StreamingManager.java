@@ -87,13 +87,14 @@ public class StreamingManager {
                                         BufferedInputStream bis = null;
                                         try {
                                             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-                                            dos.writeInt(NetworkProtocol.START_STREAM);
-                                            dos.writeLong(file.length());
-                                            dos.flush();
                                             bis = new BufferedInputStream(new FileInputStream(file));
+                                            dos.writeInt(NetworkProtocol.START_STREAM);
+                                            dos.writeLong(bis.available());
+                                            dos.flush();
                                             byte[] buffer = new byte[10240];
                                             long bytesRead = 0;
-                                            while ((bytesRead += bis.read(buffer, 0, buffer.length)) != file.length()) {
+                                            while (bytesRead != file.length()) {
+                                                bytesRead += bis.read(buffer, 0, buffer.length);
                                                 dos.write(buffer);
                                                 Log.i("Chunk",""+bytesRead);
                                                 dos.flush();

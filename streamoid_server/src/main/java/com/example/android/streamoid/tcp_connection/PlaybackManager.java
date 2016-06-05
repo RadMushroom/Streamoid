@@ -5,6 +5,7 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.util.Log;
 
+import com.example.android.streamoid.Callback;
 import com.example.android.streamoid.model.MusicTrack;
 import com.example.android.streamoid.model.QueueItem;
 import com.example.android.streamoid.udp_connection.NetworkProtocol;
@@ -26,20 +27,27 @@ public class PlaybackManager {
 
     private static Queue<QueueItem> playList = new LinkedList<>();
     private static boolean isPlaying = false;
+    private QueueItem queueItem;
+    private final Callback callback;
 
-    public static void addToPlayList(QueueItem queueItem) {
-        if (playList.contains(queueItem)) {
+    public PlaybackManager(Callback callback) {
+        this.callback = callback;
+    }
+
+    public void addToPlayList(QueueItem queueItem) {
+        if (playList.contains(queueItem) || (this.queueItem != null && this.queueItem.equals(queueItem))) {
             return;
         }
         playList.add(queueItem);
+        callback.updateAdapter(queueItem.getMusicTrack());
         if (!playList.isEmpty() && !isPlaying) {
             requestStream();
         }
     }
 
-    public static void requestStream() {
+    public void requestStream() {
         isPlaying = true;
-        QueueItem queueItem = playList.poll();
+        queueItem = playList.poll();
         if (queueItem == null)
             return;
         InetAddress address = queueItem.getAddress();
@@ -63,47 +71,34 @@ public class PlaybackManager {
                                 bufferSize, AudioTrack.MODE_STREAM);
                         final long fileSize = dis.readLong();
                         audioTrack.play();
-                        audioTrack.setNotificationMarkerPosition(musicTrack.getFileDuration()*frequency);
-                        audioTrack.setPlaybackPositionUpdateListener(new AudioTrack.OnPlaybackPositionUpdateListener() {
-                            @Override
-                            public void onMarkerReached(AudioTrack track) {
-                                Log.i("MarkerReached","MarkerReached");
-                                try {
-                                    socket.close();
-                                    isPlaying = false;
-                                    requestStream();
-                                } catch (IOException e) {
-                                    e.printStackTrace();
-                                }
+                        long readBytes = 0;
+                        Log.e("SIZE:", "" + fileSize);
+                        while (readBytes <= fileSize) {
+                            byte[] buffer = new byte[10240];
+                            try {
+                                readBytes += dis.read(buffer);
+                                Log.i("ReadBytes", "" + readBytes);
+                                audioTrack.write(buffer, 0, buffer.length);
+                            } catch (IOException e) {
+                                isPlaying = false;
+                                Log.e("Player exception", e.getMessage());
                             }
-
-                            @Override
-                            public void onPeriodicNotification(AudioTrack track) {
-
-                            }
-                        });
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                long readBytes = 0;
-                                while (readBytes != fileSize) {
-                                    byte[] buffer = new byte[10240];
-                                    try {
-                                        readBytes += dis.read(buffer);
-                                        Log.i("ReadBytes",""+readBytes);
-                                        audioTrack.write(buffer, 0, buffer.length);
-                                    } catch (IOException e) {
-                                        isPlaying = false;
-                                        e.printStackTrace();
-                                    }
-                                }
-                                Log.i("njnjnj",""+audioTrack.getPlaybackHeadPosition());
-                            }
-                        }).start();
+                        }
+                        try {
+                            socket.close();
+                            isPlaying = false;
+                            queueItem = null;
+                            callback.removeItem(musicTrack);
+                            requestStream();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
                         break;
                     case NetworkProtocol.STOP_STREAM:
                         socket.close();
+                        queueItem = null;
                         isPlaying = false;
+                        callback.removeItem(musicTrack);
                         requestStream();
                         break;
                 }
@@ -111,6 +106,8 @@ public class PlaybackManager {
         } catch (IOException e) {
             e.printStackTrace();
             isPlaying = false;
+            callback.removeItem(musicTrack);
+            queueItem = null;
         }
     }
 }
