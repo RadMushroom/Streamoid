@@ -13,12 +13,14 @@ import java.util.logging.Logger;
 
 import javax.inject.Inject;
 public class BroadcastListener extends Activity implements Runnable {
+    private final AddressListener addressListener;
     private int clientPort;
     private DatagramSocket socket;
     @Inject
     protected StreamingManager streamingManager;
-    public BroadcastListener(int serverPort) {
+    public BroadcastListener(int serverPort, AddressListener addressListener) {
         this.clientPort = serverPort;
+        this.addressListener = addressListener;
         StreamoidApp.getAppComponent().inject(this);
     }
 
@@ -37,6 +39,7 @@ public class BroadcastListener extends Activity implements Runnable {
                 socket.receive(packet);
                 final String serverAddress = packet.getAddress().getHostAddress();
                 streamingManager.setServerAddress(serverAddress);
+                addressListener.onAddressReceived();
             }
         } catch (SocketException se) {
             Logger.getGlobal().log(Level.WARNING, "Socket closed: " + se.getMessage());

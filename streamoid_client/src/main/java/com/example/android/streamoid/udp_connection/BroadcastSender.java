@@ -1,5 +1,7 @@
 package com.example.android.streamoid.udp_connection;
 
+import android.util.Log;
+
 import com.example.android.streamoid.AppPreferences;
 import com.example.android.streamoid.StreamoidApp;
 
@@ -8,8 +10,6 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.inject.Inject;
 
@@ -34,17 +34,24 @@ public class BroadcastSender implements Runnable {
             byte[] sendData = NetworkProtocol.DISCOVER.getBytes();
             //Send a response
             DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(appPreferences.getBroadcastAddress()), 9001);
-            try {
-                socket.send(sendPacket);
-            } catch (IOException e) {
-                Logger.getGlobal().log(Level.SEVERE, e.getMessage(), e);
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    socket.send(sendPacket);
+                    Log.i("Sent packet to", sendPacket.getAddress().getHostName());
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    if (!socket.isClosed()) {
+                        socket.close();
+                        e.printStackTrace();
+                    }
+                }
             }
         } catch (SocketException se) {
-            Logger.getGlobal().log(Level.WARNING, "Socket closed");
+            Log.e("Sender socket exception", "Socket closed");
         } catch (IOException ex) {
-            Logger.getGlobal().log(Level.SEVERE, "IO Exception", ex);
+            Log.e("Socket IO exception", ex.getMessage());
         } finally {
-            Logger.getGlobal().info(">>>Sender Stop listening broadcast...");
+            Log.e("Sender",">>>Sender Stop listening broadcast...");
         }
     }
 

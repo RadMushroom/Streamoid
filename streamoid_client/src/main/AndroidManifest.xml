@@ -16,7 +16,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         android:name=".StreamoidApp">
-        <activity android:name=".activities.MainActivity"/>
+        <activity android:name=".activities.MainActivity"
+            android:screenOrientation="portrait"/>
         <activity
             android:name=".activities.PreferencesActivity"
             android:label="Preferences" />

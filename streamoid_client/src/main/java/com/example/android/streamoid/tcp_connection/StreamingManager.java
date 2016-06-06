@@ -11,6 +11,7 @@ import com.github.hiteshsondhi88.libffmpeg.ExecuteBinaryResponseHandler;
 import com.google.gson.Gson;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -31,6 +32,8 @@ public class StreamingManager {
     protected Context context;
     @Inject
     AppPreferences preferences;
+    private DatagramSocket datagramSocket;
+
     public StreamingManager(Gson gson, Context context, AppPreferences preferences) {
         this.gson = gson;
         this.preferences = preferences;
@@ -86,14 +89,15 @@ public class StreamingManager {
                                         Log.e("onFinish", "onFinish");
                                         BufferedInputStream bis = null;
                                         try {
-                                            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+                                            DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
                                             dos.writeInt(NetworkProtocol.START_STREAM);
+                                            bis = new BufferedInputStream(new FileInputStream(file));
                                             dos.writeLong(file.length());
                                             dos.flush();
-                                            bis = new BufferedInputStream(new FileInputStream(file));
                                             byte[] buffer = new byte[10240];
                                             long bytesRead = 0;
-                                            while ((bytesRead += bis.read(buffer, 0, buffer.length)) != file.length()) {
+                                           while ((bytesRead != file.length())) {
+                                                bytesRead += bis.read(buffer, 0, buffer.length);
                                                 dos.write(buffer);
                                                 Log.i("Chunk",""+bytesRead);
                                                 dos.flush();
@@ -125,10 +129,12 @@ public class StreamingManager {
             @Override
             public void run() {
                 try {
-                    DatagramSocket datagramSocket = new DatagramSocket(10000);
+                    if (datagramSocket == null) {
+                        datagramSocket = new DatagramSocket(10000);
+                    }
                     for (MusicTrack musicTrack : musicTracks) {
                         byte[] metaData = gson.toJson(musicTrack).getBytes();
-                        DatagramPacket datagramPacket = new DatagramPacket(metaData, metaData.length, InetAddress.getByName(preferences.getBroadcastAddress()), 9001);
+                        DatagramPacket datagramPacket = new DatagramPacket(metaData, metaData.length, InetAddress.getByName(serverAddress), 9001);
                         datagramSocket.send(datagramPacket);
                     }
                 } catch (IOException e) {
@@ -141,6 +147,10 @@ public class StreamingManager {
 
     public void setServerAddress(String serverAddress) {
         this.serverAddress = serverAddress;
+    }
+
+    public void stop() {
+        datagramSocket.close();
     }
 
 }

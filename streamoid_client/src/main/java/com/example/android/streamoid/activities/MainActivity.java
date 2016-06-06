@@ -18,7 +18,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 
-import com.canelmas.let.AskPermission;
 import com.canelmas.let.Let;
 import com.example.android.streamoid.R;
 import com.example.android.streamoid.StreamoidApp;
@@ -27,6 +26,7 @@ import com.example.android.streamoid.adapter.TrackAdapter;
 import com.example.android.streamoid.adapter.listeners.OnItemClickListener;
 import com.example.android.streamoid.model.MusicTrack;
 import com.example.android.streamoid.tcp_connection.StreamingManager;
+import com.example.android.streamoid.udp_connection.AddressListener;
 import com.example.android.streamoid.udp_connection.BroadcastListener;
 import com.example.android.streamoid.udp_connection.BroadcastSender;
 
@@ -42,9 +42,7 @@ import javax.inject.Inject;
 import butterknife.Bind;
 import butterknife.OnClick;
 
-import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
-
-public class MainActivity extends BaseActivity implements OnItemClickListener {
+public class MainActivity extends BaseActivity implements OnItemClickListener, AddressListener {
 
     private static final int PICKFILE_REQUEST_CODE = 1001;
     private static final int PICKIMAGE_REQUEST_CODE = 1002;
@@ -87,7 +85,7 @@ public class MainActivity extends BaseActivity implements OnItemClickListener {
         mp = new MediaPlayer();
         decimalFormatSymbols.setGroupingSeparator('.');
         decimalFormat = new DecimalFormat("0.00", decimalFormatSymbols);
-        broadcastListener = new BroadcastListener(8999);
+        broadcastListener = new BroadcastListener(8999, this);
         new Thread(broadcastListener).start();
         broadcastSender = new BroadcastSender(9001);
         new Thread(broadcastSender).start();
@@ -131,6 +129,9 @@ public class MainActivity extends BaseActivity implements OnItemClickListener {
             broadcastListener.stop();
         if (broadcastSender != null)
             broadcastSender.stop();
+        if (streamingManager != null) {
+            streamingManager.stop();
+        }
     }
 
     @Override
@@ -247,8 +248,8 @@ public class MainActivity extends BaseActivity implements OnItemClickListener {
     }
 
 
+//    @AskPermission(WRITE_EXTERNAL_STORAGE)
     @OnClick(R.id.fab)
-    @AskPermission(WRITE_EXTERNAL_STORAGE)
     protected void startStream() {
         if (trackAdapter != null && !trackAdapter.getData().isEmpty()) {
             streamingManager.sendMetaData(trackAdapter.getData());
@@ -261,5 +262,10 @@ public class MainActivity extends BaseActivity implements OnItemClickListener {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         Let.handle(this, requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void onAddressReceived() {
+        broadcastSender.stop();
     }
 }
