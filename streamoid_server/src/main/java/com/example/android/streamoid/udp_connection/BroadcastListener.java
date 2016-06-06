@@ -1,5 +1,7 @@
 package com.example.android.streamoid.udp_connection;
 
+import android.content.Context;
+import android.net.wifi.WifiManager;
 import android.util.Log;
 
 import com.example.android.streamoid.Callback;
@@ -23,20 +25,26 @@ import java.util.logging.Logger;
 import javax.inject.Inject;
 
 public class BroadcastListener implements Runnable {
-    Callback myCallback = null;
     private int serverPort;
     private DatagramSocket socket;
     private Queue<DatagramPacket> pool = new LinkedList<>();
     @Inject
     protected Gson gson;
+    @Inject
+    protected Context context;
+    private PlaybackManager playbackManager;
+
     public BroadcastListener(int serverPort,Callback callback) {
         this.serverPort = serverPort;
-        this.myCallback = callback;
+        playbackManager = new PlaybackManager(callback);
         StreamoidApp.getAppComponent().inject(this);
     }
 
     @Override
     public void run() {
+        WifiManager wifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        WifiManager.MulticastLock multicastLock = wifiManager.createMulticastLock("lock");
+        multicastLock.acquire();
         try {
             //Keep a socket open to listen to all the UDP trafic that is destined for this port
             socket = new DatagramSocket(serverPort, InetAddress.getByName("0.0.0.0"));
@@ -66,6 +74,7 @@ public class BroadcastListener implements Runnable {
         } finally {
             Logger.getGlobal().info(">>>Stop listening broadcast...");
         }
+        multicastLock.release();
     }
 
     private Thread createThread() {
@@ -91,7 +100,6 @@ public class BroadcastListener implements Runnable {
                     } else if (ServerUtils.isTrackJson(message)) {
                         final MusicTrack musicTrack = gson.fromJson(message,MusicTrack.class);
                         Log.e("Check",musicTrack.toString());
-                        myCallback.updateAdapter(musicTrack);
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
@@ -99,7 +107,7 @@ public class BroadcastListener implements Runnable {
                                 queueItem.setAddress(packet.getAddress());
                                 queueItem.setPort(10001);
                                 queueItem.setMusicTrack(musicTrack);
-                                PlaybackManager.addToPlayList(queueItem);
+                                playbackManager.addToPlayList(queueItem);
                             }
                         }).start();
                     }

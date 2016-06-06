@@ -29,16 +29,10 @@ public class MainActivity extends BaseActivity implements Callback {
     @Bind(R.id.lvMain)
     protected RecyclerView tracksRecyclerView;
     public static TrackAdapter trackAdapter;
-    private BroadcastListener broadcastListener;
-    private WifiManager.MulticastLock multicastLock;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        WifiManager wifiManager = (WifiManager) getSystemService(WIFI_SERVICE);
-        multicastLock = wifiManager.createMulticastLock("lock");
-        multicastLock.setReferenceCounted(true);
-        multicastLock.acquire();
         StreamoidApp.getAppComponent().inject(this);
         setSupportActionBar(tb);
         server = new Server(9000,this);
@@ -56,10 +50,6 @@ public class MainActivity extends BaseActivity implements Callback {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (multicastLock != null){
-            multicastLock.release();
-            multicastLock = null;
-        }
         if (server != null) server.stop();
     }
 
@@ -96,6 +86,16 @@ public class MainActivity extends BaseActivity implements Callback {
             @Override
             public void run() {
                 trackAdapter.addItem(musicTrack);
+            }
+        });
+    }
+
+    @Override
+    public void removeItem(final MusicTrack musicTrack) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                trackAdapter.removeItem(musicTrack);
             }
         });
     }

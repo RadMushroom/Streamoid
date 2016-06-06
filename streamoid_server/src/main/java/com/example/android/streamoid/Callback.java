@@ -7,4 +7,5 @@ import com.example.android.streamoid.model.MusicTrack;
  */
 public interface Callback {
     void updateAdapter(MusicTrack musicTrack);
+    void removeItem(MusicTrack musicTrack);
 }

@@ -4,52 +4,56 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:foreground="?android:attr/selectableItemBackground"
+    android:id="@+id/cardViewItem"
     app:cardCornerRadius="5dp"
     app:cardUseCompatPadding="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="8dp"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:padding="8dp">
 
         <ImageView
             android:id="@+id/picNote"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_music_note"/>
+            android:src="@drawable/ic_music_note" />
+
         <TextView
-            android:layout_marginLeft="10dp"
+            android:id="@+id/trackArtist"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/trackArtist"
-            android:layout_gravity="center"/>
-        <TextView
-            android:singleLine="true"
             android:layout_gravity="center"
-            android:text=""
+            android:layout_marginLeft="10dp" />
+
+        <TextView
             android:id="@+id/fileName"
-            android:textStyle="bold"
-            android:layout_marginLeft="10dp"
             android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginLeft="10dp"
             android:layout_weight="1"
-            android:layout_height="wrap_content" />
-        <TextView
+            android:singleLine="true"
             android:text=""
-            android:layout_marginLeft="10dp"
-            android:layout_gravity="center"
+            android:textStyle="bold" />
+
+        <TextView
             android:id="@+id/fileSize"
-            android:textStyle="normal"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <TextView
-            android:text=""
-            android:layout_marginLeft="10dp"
+            android:layout_height="wrap_content"
             android:layout_gravity="center"
+            android:layout_marginLeft="10dp"
+            android:text=""
+            android:textStyle="normal" />
+
+        <TextView
             android:id="@+id/trackDuration"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            />
+            android:layout_gravity="center"
+            android:layout_marginLeft="10dp"
+            android:text="" />
     </LinearLayout>
 
 </android.support.v7.widget.CardView>

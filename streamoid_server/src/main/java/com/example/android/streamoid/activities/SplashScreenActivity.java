@@ -31,17 +31,17 @@ public class SplashScreenActivity extends BaseActivity {
     protected void onStart() {
         super.onStart();
         int secondsDelayed = 1;
-        if (ServerUtils.checkWiFiConnection(this)) {
+//        if (ServerUtils.checkWiFiConnection(this)) {
             new Handler().postDelayed(new Runnable() {
                 public void run() {
                     startActivity(new Intent(SplashScreenActivity.this, MainActivity.class));
                     finish();
                 }
             }, secondsDelayed * 1000);
-        } else {
-            refreshButton.setVisibility(View.VISIBLE);
-            toast("Please connect to Wi-Fi network!");
-        }
+//        } else {
+//            refreshButton.setVisibility(View.VISIBLE);
+//            toast("Please connect to Wi-Fi network!");
+//        }
     }
 
     @OnClick(R.id.refreshButton)

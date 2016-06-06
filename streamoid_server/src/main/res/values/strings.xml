@@ -2,4 +2,5 @@
     <string name="app_name">Streamoid Server</string>
     <string name="default_device_name">Default Server</string>
     <string name="device_name">Device Name</string>
+    <string name="default_name">friend!</string>
 </resources>
