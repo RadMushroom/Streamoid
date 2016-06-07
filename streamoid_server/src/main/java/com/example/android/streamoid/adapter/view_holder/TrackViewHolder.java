@@ -10,13 +10,14 @@ import android.widget.TextView;
 import com.example.android.streamoid.R;
 import com.example.android.streamoid.adapter.listeners.OnItemClickListener;
 import com.example.android.streamoid.model.MusicTrack;
+import com.example.android.streamoid.model.QueueItem;
 
 import butterknife.Bind;
 
 /**
  * Created by RadMushroom on 27.04.2016.
  */
-public class TrackViewHolder extends BaseViewHolder<MusicTrack> {
+public class TrackViewHolder extends BaseViewHolder<QueueItem> {
 
     @Bind(R.id.picNote)
     protected ImageView picNote;
@@ -28,9 +29,10 @@ public class TrackViewHolder extends BaseViewHolder<MusicTrack> {
     protected TextView fileSize;
     @Bind(R.id.trackArtist)
     protected TextView trackArtist;
+    @Bind(R.id.cardViewItem)
+    protected CardView cardView;
 
-    public TrackViewHolder(View view, final OnItemClickListener onItemClickListener
-    ) {
+    public TrackViewHolder(View view, final OnItemClickListener onItemClickListener) {
         super(view);
         if (onItemClickListener != null) {
             view.setOnClickListener(new View.OnClickListener() {
@@ -45,7 +47,13 @@ public class TrackViewHolder extends BaseViewHolder<MusicTrack> {
     }
 
     @Override
-    public void bind(MusicTrack musicTrack) {
+    public void bind(QueueItem queueItem) {
+        MusicTrack musicTrack = queueItem.getMusicTrack();
+        if (queueItem.isActive()) {
+            cardView.setCardBackgroundColor(ContextCompat.getColor(cardView.getContext(), R.color.accent));
+        } else {
+            cardView.setCardBackgroundColor(ContextCompat.getColor(cardView.getContext(), R.color.background));
+        }
         trackDuration.setText(String.format("%d:%d", musicTrack.getFileDuration()/ (60*1000), musicTrack.getFileDuration() % (60*1000)));
         fileName.setText(musicTrack.getFileName());
         fileSize.setText(musicTrack.getFileSize());

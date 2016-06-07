@@ -14,6 +14,7 @@ import com.example.android.streamoid.R;
 import com.example.android.streamoid.StreamoidApp;
 import com.example.android.streamoid.adapter.TrackAdapter;
 import com.example.android.streamoid.model.MusicTrack;
+import com.example.android.streamoid.model.QueueItem;
 import com.example.android.streamoid.udp_connection.BroadcastListener;
 import com.example.android.streamoid.udp_connection.Server;
 
@@ -37,7 +38,7 @@ public class MainActivity extends BaseActivity implements Callback {
         setSupportActionBar(tb);
         server = new Server(9000,this);
         server.run();
-        trackAdapter = new TrackAdapter(this,new ArrayList<>(Collections.<MusicTrack>emptyList()));
+        trackAdapter = new TrackAdapter(this,new ArrayList<>(Collections.<QueueItem>emptyList()));
         tracksRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         tracksRecyclerView.setAdapter(trackAdapter);
     }
@@ -81,21 +82,21 @@ public class MainActivity extends BaseActivity implements Callback {
     }
 
     @Override
-    public void updateAdapter(final MusicTrack musicTrack) {
+    public void addItem(final QueueItem queueItem) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                trackAdapter.addItem(musicTrack);
+                trackAdapter.addItem(queueItem);
             }
         });
     }
 
     @Override
-    public void removeItem(final MusicTrack musicTrack) {
+    public void updateItem(final QueueItem queueItem, final boolean isActive) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                trackAdapter.removeItem(musicTrack);
+                trackAdapter.updateItem(queueItem, isActive);
             }
         });
     }

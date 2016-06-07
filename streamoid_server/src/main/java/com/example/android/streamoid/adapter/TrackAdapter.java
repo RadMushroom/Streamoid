@@ -9,17 +9,18 @@ import com.example.android.streamoid.adapter.listeners.OnItemClickListener;
 import com.example.android.streamoid.adapter.view_holder.BaseViewHolder;
 import com.example.android.streamoid.adapter.view_holder.TrackViewHolder;
 import com.example.android.streamoid.model.MusicTrack;
+import com.example.android.streamoid.model.QueueItem;
 
 import java.util.List;
 
 /**
  * Created by RadMushroom on 27.04.2016.
  */
-public class TrackAdapter extends BaseRecyclerViewAdapter<MusicTrack> {
+public class TrackAdapter extends BaseRecyclerViewAdapter<QueueItem> {
 
     private OnItemClickListener onItemClickListener;
 
-    public TrackAdapter(BaseActivity baseActivity, List<MusicTrack> data) {
+    public TrackAdapter(BaseActivity baseActivity, List<QueueItem> data) {
         super(baseActivity, data);
         if (baseActivity instanceof OnItemClickListener) {
             onItemClickListener = (OnItemClickListener) baseActivity;
@@ -27,14 +28,25 @@ public class TrackAdapter extends BaseRecyclerViewAdapter<MusicTrack> {
     }
 
     @Override
-    public BaseViewHolder<MusicTrack> onCreateViewHolder(ViewGroup parent, int viewType) {
+    public BaseViewHolder<QueueItem> onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = layoutInflater.inflate(R.layout.track_layout, parent, false);
         return new TrackViewHolder(view, onItemClickListener);
     }
 
     @Override
-    public void onBindViewHolder(BaseViewHolder<MusicTrack> holder, int position) {
-        MusicTrack musicTrack = data.get(position);
-        holder.bind(musicTrack);
+    public void onBindViewHolder(BaseViewHolder<QueueItem> holder, int position) {
+        QueueItem queueItem = data.get(position);
+        holder.bind(queueItem);
+    }
+
+    public void updateItem(QueueItem queueItem, boolean isActive) {
+        for (QueueItem item : data) {
+            if (queueItem.equals(item)) {
+                item.setActive(isActive);
+            } else {
+                item.setActive(false);
+            }
+        }
+        notifyDataSetChanged();
     }
 }

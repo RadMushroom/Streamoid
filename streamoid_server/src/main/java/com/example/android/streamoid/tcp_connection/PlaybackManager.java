@@ -39,7 +39,7 @@ public class PlaybackManager {
             return;
         }
         playList.add(queueItem);
-        callback.updateAdapter(queueItem.getMusicTrack());
+        callback.addItem(queueItem);
         if (!playList.isEmpty() && !isPlaying) {
             requestStream();
         }
@@ -50,6 +50,7 @@ public class PlaybackManager {
         queueItem = playList.poll();
         if (queueItem == null)
             return;
+        callback.updateItem(queueItem, true);
         InetAddress address = queueItem.getAddress();
         int port = queueItem.getPort();
         MusicTrack musicTrack = queueItem.getMusicTrack();
@@ -87,8 +88,8 @@ public class PlaybackManager {
                         try {
                             socket.close();
                             isPlaying = false;
+                            callback.updateItem(queueItem, false);
                             queueItem = null;
-                            callback.removeItem(musicTrack);
                             requestStream();
                         } catch (IOException e) {
                             e.printStackTrace();
@@ -96,9 +97,9 @@ public class PlaybackManager {
                         break;
                     case NetworkProtocol.STOP_STREAM:
                         socket.close();
+                        callback.updateItem(queueItem ,false);
                         queueItem = null;
                         isPlaying = false;
-                        callback.removeItem(musicTrack);
                         requestStream();
                         break;
                 }
@@ -106,7 +107,7 @@ public class PlaybackManager {
         } catch (IOException e) {
             e.printStackTrace();
             isPlaying = false;
-            callback.removeItem(musicTrack);
+            callback.updateItem(queueItem, false);
             queueItem = null;
         }
     }
