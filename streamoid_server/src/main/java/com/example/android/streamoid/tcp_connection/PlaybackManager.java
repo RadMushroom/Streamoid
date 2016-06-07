@@ -63,7 +63,7 @@ public class PlaybackManager {
             while ((command = dis.readInt()) != -1) {
                 switch (command) {
                     case NetworkProtocol.START_STREAM:
-                        int frequency = 44100;
+                        int frequency = musicTrack.getFrequency();
                         int channelConfig = AudioFormat.CHANNEL_OUT_STEREO;
                         int encoding = AudioFormat.ENCODING_PCM_16BIT;
                         int bufferSize = AudioTrack.getMinBufferSize(frequency, channelConfig, encoding);

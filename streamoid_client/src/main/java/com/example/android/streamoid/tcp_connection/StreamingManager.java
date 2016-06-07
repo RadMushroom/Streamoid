@@ -86,26 +86,31 @@ public class StreamingManager {
 
                                     @Override
                                     public void onFinish() {
-                                        Log.e("onFinish", "onFinish");
-                                        BufferedInputStream bis = null;
-                                        try {
-                                            DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-                                            dos.writeInt(NetworkProtocol.START_STREAM);
-                                            bis = new BufferedInputStream(new FileInputStream(file));
-                                            dos.writeLong(file.length());
-                                            dos.flush();
-                                            byte[] buffer = new byte[10240];
-                                            long bytesRead = 0;
-                                           while ((bytesRead != file.length())) {
-                                                bytesRead += bis.read(buffer, 0, buffer.length);
-                                                dos.write(buffer);
-                                                Log.i("Chunk",""+bytesRead);
-                                                dos.flush();
+                                        new Thread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                Log.e("onFinish", "onFinish");
+                                                BufferedInputStream bis = null;
+                                                try {
+                                                    DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
+                                                    dos.writeInt(NetworkProtocol.START_STREAM);
+                                                    bis = new BufferedInputStream(new FileInputStream(file));
+                                                    dos.writeLong(file.length());
+                                                    dos.flush();
+                                                    byte[] buffer = new byte[10240];
+                                                    long bytesRead = 0;
+                                                    while ((bytesRead != file.length())) {
+                                                        bytesRead += bis.read(buffer, 0, buffer.length);
+                                                        dos.write(buffer);
+                                                        Log.i("Chunk",""+bytesRead);
+                                                        dos.flush();
+                                                    }
+                                                    bis.close();
+                                                } catch (IOException e) {
+                                                    Log.e("onFinishError",e.getMessage());
+                                                }
                                             }
-                                            bis.close();
-                                        } catch (IOException e) {
-                                            Log.e("onFinishError",e.getMessage());
-                                        }
+                                        }).start();
                                     }
 
                                     @Override

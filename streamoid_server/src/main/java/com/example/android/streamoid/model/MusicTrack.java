@@ -15,4 +15,5 @@ public class MusicTrack {
     private String fileName;
     private String fileSize;
     private int fileDuration;
+    private int frequency;
 }

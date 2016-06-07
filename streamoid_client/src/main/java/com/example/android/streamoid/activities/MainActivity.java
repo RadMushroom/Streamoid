@@ -3,6 +3,8 @@ package com.example.android.streamoid.activities;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.media.MediaExtractor;
+import android.media.MediaFormat;
 import android.media.MediaMetadataRetriever;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -80,7 +82,7 @@ public class MainActivity extends BaseActivity implements OnItemClickListener, A
                 (ip >> 8 & 0xff),
                 (ip >> 16 & 0xff),
                 (ip >> 24 & 0xff));
-        appPreferences.setBroadcastAddress(ipString.substring(0,ipString.length()-3)+"255");
+        appPreferences.setBroadcastAddress(ipString.substring(0, ipString.length() - 3) + "255");
         setSupportActionBar(tb);
         mp = new MediaPlayer();
         decimalFormatSymbols.setGroupingSeparator('.');
@@ -121,7 +123,7 @@ public class MainActivity extends BaseActivity implements OnItemClickListener, A
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (multicastLock != null){
+        if (multicastLock != null) {
             multicastLock.release();
             multicastLock = null;
         }
@@ -182,7 +184,17 @@ public class MainActivity extends BaseActivity implements OnItemClickListener, A
                         String parsedTrackDuration = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
                         int trackDuration = Integer.valueOf(parsedTrackDuration);
                         String artist = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
-                        MusicTrack musicTrack = new MusicTrack(artist, filePath, fileName, fileSize, trackDuration);
+                        MediaExtractor extractor = new MediaExtractor();
+                        int frequency = 0;
+                        try {
+                            extractor.setDataSource(filePath);
+                            MediaFormat mediaFormat = extractor.getTrackFormat(0);
+                            frequency = mediaFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        MusicTrack musicTrack = new MusicTrack(artist, filePath, fileName, fileSize, trackDuration, frequency);
+
                         trackAdapter.addItem(musicTrack);
                     } else {
                         toast("Error while reading file");
@@ -248,7 +260,7 @@ public class MainActivity extends BaseActivity implements OnItemClickListener, A
     }
 
 
-//    @AskPermission(WRITE_EXTERNAL_STORAGE)
+    //    @AskPermission(WRITE_EXTERNAL_STORAGE)
     @OnClick(R.id.fab)
     protected void startStream() {
         if (trackAdapter != null && !trackAdapter.getData().isEmpty()) {
